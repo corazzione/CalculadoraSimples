@@ -1,28 +1,25 @@
 import tkinter as tk
 from tkinter import font
 
-# Configurações da janela
 root = tk.Tk()
 root.title("Calculadora")
-root.geometry("300x450")
+root.geometry("300x500")
 root.configure(bg="#000000")
 
-# Aqui alteramos a fonte
-custom_font = font.Font(family="Helvetica", size=20)
-
-# Para armazenar a expressão
+custom_font = font.Font(family="SF Pro Display", size=20)
 expressao = ""
 
-# Função para atualizar a expressão
+
 def atualizar_expressao(valor):
     global expressao
     expressao += str(valor)
     label_resultado.config(text=expressao)
 
-# Função para calcular o resultado
+
 def calcular():
     global expressao
     try:
+        expressao = expressao.replace("x", "*")
         resultado = str(eval(expressao))
         label_resultado.config(text=resultado)
         expressao = resultado
@@ -30,45 +27,64 @@ def calcular():
         label_resultado.config(text="Erro")
         expressao = ""
 
-# Função para limpar a tela
+
 def limpar():
     global expressao
     expressao = ""
     label_resultado.config(text="0")
 
-# Label para exibir o resultado
+
+def inverter_sinal():
+    global expressao
+    if expressao and expressao[0] == '-':
+        expressao = expressao[1:]
+    else:
+        expressao = '-' + expressao if expressao else ""
+    label_resultado.config(text=expressao)
+
+
+def porcentagem():
+    global expressao
+    try:
+        valor = float(eval(expressao))
+        expressao = str(valor / 100)
+        label_resultado.config(text=expressao)
+    except:
+        label_resultado.config(text="Erro")
+        expressao = ""
+
+
 label_resultado = tk.Label(root, text="0", font=custom_font, fg="#FFFFFF", bg="#000000", anchor="e", padx=20)
 label_resultado.pack(fill=tk.BOTH, expand=True)
 
-# Frame para os botões
 frame_botoes = tk.Frame(root, bg="#000000")
 frame_botoes.pack(fill=tk.BOTH, expand=True)
 
-# Botões
 botoes = [
-    ("C", 1, 0, "#A5A5A5"), ("/", 1, 3, "#FF9500"),
-    ("7", 2, 0, "#333333"), ("8", 2, 1, "#333333"), ("9", 2, 2, "#333333"), ("*", 2, 3, "#FF9500"),
-    ("4", 3, 0, "#333333"), ("5", 3, 1, "#333333"), ("6", 3, 2, "#333333"), ("-", 3, 3, "#FF9500"),
-    ("1", 4, 0, "#333333"), ("2", 4, 1, "#333333"), ("3", 4, 2, "#333333"), ("+", 4, 3, "#FF9500"),
-    ("0", 5, 0, "#333333", 2), (".", 5, 2, "#333333"), ("=", 5, 3, "#FF9500")
+    ("AC", 1, 0, "#A5A5A5", 1), ("+/-", 1, 1, "#A5A5A5", 1), ("%", 1, 2, "#A5A5A5", 1), ("/", 1, 3, "#FF9500", 1),
+    ("7", 2, 0, "#333333", 1), ("8", 2, 1, "#333333", 1), ("9", 2, 2, "#333333", 1), ("x", 2, 3, "#FF9500", 1),
+    ("4", 3, 0, "#333333", 1), ("5", 3, 1, "#333333", 1), ("6", 3, 2, "#333333", 1), ("-", 3, 3, "#FF9500", 1),
+    ("1", 4, 0, "#333333", 1), ("2", 4, 1, "#333333", 1), ("3", 4, 2, "#333333", 1), ("+", 4, 3, "#FF9500", 1),
+    ("0", 5, 0, "#333333", 2), (".", 5, 2, "#333333", 1), ("=", 5, 3, "#FF9500", 1)
 ]
 
-for botao in botoes:
-    if len(botao) == 4:  # Se não tiver colspan, adiciona o valor padrão 1
-        botao = (*botao, 1)
-    texto, linha, coluna, cor, colspan = botao
+for (texto, linha, coluna, cor, colspan) in botoes:
+    cmd = lambda t=texto: atualizar_expressao(t) if t not in {"=", "AC", "+/-", "%"} else None
+    if texto == "AC":
+        cmd = limpar
+    elif texto == "+/-":
+        cmd = inverter_sinal
+    elif texto == "%":
+        cmd = porcentagem
+    elif texto == "=":
+        cmd = calcular
 
-    botao_widget = tk.Button(
-        frame_botoes, text=texto, font=custom_font, fg="#FFFFFF", bg=cor, bd=0, highlightthickness=0,
-        command=lambda t=texto: atualizar_expressao(t) if t not in {"=", "C"} else calcular() if t == "=" else limpar()
-    )
-    botao_widget.grid(row=linha, column=coluna, columnspan=colspan, sticky="nsew", padx=5, pady=5)
+    botao = tk.Button(frame_botoes, text=texto, font=custom_font,
+                      fg="#000000" if texto in {"AC", "+/-", "%"} else "#FFFFFF",
+                      bg=cor, bd=0, highlightthickness=0, command=cmd)
+    botao.grid(row=linha, column=coluna, columnspan=colspan, sticky="nsew", padx=2, pady=2)
 
-# Ajustar o tamanho das linhas e colunas
-for i in range(5):
-    frame_botoes.rowconfigure(i, weight=1)
-for j in range(4):
-    frame_botoes.columnconfigure(j, weight=1)
+for i in range(6): frame_botoes.rowconfigure(i, weight=1)
+for j in range(4): frame_botoes.columnconfigure(j, weight=1)
 
-# Iniciar a aplicação
 root.mainloop()
